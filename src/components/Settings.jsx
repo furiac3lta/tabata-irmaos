@@ -15,8 +15,8 @@ const Settings = ({ onSave }) => {
     onSave(minutes, seconds, repetitions, restMinutes, restSeconds, warmupMinutes, warmupSeconds);
   };
 
-  const handleInputChange = (setter) => (e) => {
-    const value = Math.max(0, Number(e.target.value));
+  const handleInputChange = (setter, maxValue) => (e) => {
+    const value = Math.min(Math.max(0, Number(e.target.value)), maxValue);
     setter(value);
   };
 
@@ -28,7 +28,7 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={minutes}
-          onChange={handleInputChange(setMinutes)}
+          onChange={handleInputChange(setMinutes, Infinity)}
           min="0"
         />
       </div>
@@ -37,8 +37,9 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={seconds}
-          onChange={handleInputChange(setSeconds)}
+          onChange={handleInputChange(setSeconds, 59)}
           min="0"
+          max="59"
         />
       </div>
       <div className="settings-group">
@@ -46,7 +47,7 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={repetitions}
-          onChange={handleInputChange(setRepetitions)}
+          onChange={handleInputChange(setRepetitions, Infinity)}
           min="0"
         />
       </div>
@@ -55,7 +56,7 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={restMinutes}
-          onChange={handleInputChange(setRestMinutes)}
+          onChange={handleInputChange(setRestMinutes, Infinity)}
           min="0"
         />
       </div>
@@ -64,8 +65,9 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={restSeconds}
-          onChange={handleInputChange(setRestSeconds)}
+          onChange={handleInputChange(setRestSeconds, 59)}
           min="0"
+          max="59"
         />
       </div>
       <div className="settings-group">
@@ -73,7 +75,7 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={warmupMinutes}
-          onChange={handleInputChange(setWarmupMinutes)}
+          onChange={handleInputChange(setWarmupMinutes, Infinity)}
           min="0"
         />
       </div>
@@ -82,8 +84,9 @@ const Settings = ({ onSave }) => {
         <input
           type="number"
           value={warmupSeconds}
-          onChange={handleInputChange(setWarmupSeconds)}
+          onChange={handleInputChange(setWarmupSeconds, 59)}
           min="0"
+          max="59"
         />
       </div>
       <button className="btn-save" onClick={handleSave}>Save</button>
