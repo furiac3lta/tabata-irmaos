@@ -1,115 +1,113 @@
 // src/components/Timer.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import './Timer.css';
 
-const Timer = ({ initialMinutes, initialSeconds, repetitions, restMinutes, restSeconds, warmupMinutes, warmupSeconds, onCycleComplete }) => {
-  const [minutes, setMinutes] = useState(warmupMinutes);
-  const [seconds, setSeconds] = useState(warmupSeconds);
+const Timer = ({ minutes, seconds, repetitions, restMinutes, restSeconds, warmupMinutes, warmupSeconds }) => {
+  const [timeLeft, setTimeLeft] = useState(minutes * 60 + seconds);
   const [isRunning, setIsRunning] = useState(false);
+  const [currentCycle, setCurrentCycle] = useState(0);
   const [isResting, setIsResting] = useState(false);
-  const [isWarmup, setIsWarmup] = useState(true);
-  const [cycle, setCycle] = useState(1);
-  const [percentage, setPercentage] = useState(0);
+  const [isWarmingUp, setIsWarmingUp] = useState(true);
 
-  const playSound = (sound) => {
-    const audio = new Audio(sound);
-    audio.play();
-  };
+  const goSound = useRef(null);
+  const restSound = useRef(null);
+  const alarmSound = useRef(null);
+  const warmupSound = useRef(null);
 
   useEffect(() => {
-    let timer;
-    if (isRunning) {
-      timer = setInterval(() => {
-        if (seconds > 0) {
-          setSeconds(seconds - 1);
-        } else if (minutes > 0) {
-          setMinutes(minutes - 1);
-          setSeconds(59);
-        } else {
-          if (isWarmup) {
-            setIsWarmup(false);
-            setMinutes(initialMinutes);
-            setSeconds(initialSeconds);
-            playSound('/sounds/warmup.mp3');
-          } else if (isResting) {
-            setIsResting(false);
-            setMinutes(initialMinutes);
-            setSeconds(initialSeconds);
-            playSound('/sounds/go.mp3');
-            if (cycle < repetitions) {
-              setCycle(cycle + 1);
-              onCycleComplete();
-            } else {
-              setIsRunning(false);
-            }
-          } else {
-            setIsResting(true);
-            setMinutes(restMinutes);
-            setSeconds(restSeconds);
-            playSound('/sounds/rest.mp3');
-          }
-        }
-        const totalTime = isWarmup ? warmupMinutes * 60 + warmupSeconds : isResting ? restMinutes * 60 + restSeconds : initialMinutes * 60 + initialSeconds;
-        const currentTime = minutes * 60 + seconds;
-        setPercentage((1 - currentTime / totalTime) * 100);
-
-        if (minutes === 0 && seconds === 0) {
-          setTimeout(() => playSound('/sounds/alarm.mp3'), 3000);
-        }
-      }, 1000);
+    if (isWarmingUp) {
+      setTimeLeft(warmupMinutes * 60 + warmupSeconds);
+      warmupSound.current.play();
+    } else if (isResting) {
+      setTimeLeft(restMinutes * 60 + restSeconds);
+      restSound.current.play();
+    } else {
+      setTimeLeft(minutes * 60 + seconds);
+      goSound.current.play();
     }
-    return () => clearInterval(timer);
-  }, [isRunning, seconds, minutes, isWarmup, isResting, cycle, repetitions, initialMinutes, initialSeconds, restMinutes, restSeconds, warmupMinutes, warmupSeconds, onCycleComplete]);
+  }, [isWarmingUp, isResting, minutes, seconds, restMinutes, restSeconds, warmupMinutes, warmupSeconds]);
 
-  const handleStartPause = () => {
-    setIsRunning(!isRunning);
+  useEffect(() => {
+    if (timeLeft === 0 && !isWarmingUp) {
+      alarmSound.current.play();
+      if (isResting) {
+        setCurrentCycle(currentCycle + 1);
+        setIsResting(false);
+      } else if (currentCycle < repetitions - 1) {
+        setIsResting(true);
+      } else {
+        setIsRunning(false);
+      }
+    } else if (timeLeft === 0 && isWarmingUp) {
+      setIsWarmingUp(false);
+      setIsRunning(true);
+    }
+  }, [timeLeft, isResting, currentCycle, repetitions, isWarmingUp]);
+
+  useEffect(() => {
+    if (isRunning) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isRunning]);
+
+  const handleStart = () => {
+    setIsRunning(true);
+    setIsWarmingUp(true);
   };
 
-  const handleReset = () => {
+  const handleStop = () => {
     setIsRunning(false);
-    setIsWarmup(true);
+    setIsWarmingUp(false);
     setIsResting(false);
-    setMinutes(warmupMinutes);
-    setSeconds(warmupSeconds);
-    setCycle(1);
-    setPercentage(0);
+    setTimeLeft(minutes * 60 + seconds);
+    setCurrentCycle(0);
   };
 
-  const getPathColor = () => {
-    if (isWarmup) return 'orange';
-    if (isResting) return 'red';
-    return 'yellow';
+  const getPercentage = () => {
+    if (isWarmingUp) {
+      return (timeLeft / (warmupMinutes * 60 + warmupSeconds)) * 100;
+    } else if (isResting) {
+      return (timeLeft / (restMinutes * 60 + restSeconds)) * 100;
+    } else {
+      return (timeLeft / (minutes * 60 + seconds)) * 100;
+    }
   };
 
-  const getTextColor = () => {
-    if (isWarmup) return 'orange';
-    if (isResting) return 'red';
-    return 'yellow';
+  const getColor = () => {
+    if (isWarmingUp) {
+      return "orange";
+    } else if (isResting) {
+      return "red";
+    } else {
+      return "yellow";
+    }
   };
 
   return (
     <div className="timer">
-      <div className="timer-display">
-        <CircularProgressbar
-          value={percentage}
-          text={`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`}
-          styles={buildStyles({
-            textColor: getTextColor(),
-            pathColor: getPathColor(),
-            trailColor: "black",
-            pathTransitionDuration: 0.5,
-          })}
-        />
-      </div>
+      <CircularProgressbar
+        value={getPercentage()}
+        text={`${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}`}
+        styles={buildStyles({
+          textColor: getColor(),
+          pathColor: getColor(),
+          trailColor: '#555',
+          pathTransition: 'stroke-dashoffset 0.5s ease 0s',
+        })}
+      />
       <div className="timer-buttons">
-        <button className="btn" onClick={handleStartPause}>{isRunning ? 'Pause' : 'Start'}</button>
-        <button className="btn" onClick={handleReset}>Reset</button>
+        <button onClick={handleStart}>Start</button>
+        <button onClick={handleStop}>Stop</button>
       </div>
-      <div className="timer-cycle">
-        <span>{isWarmup ? `Warmup...` : isResting ? `Resting...` : `Cycle: ${cycle}/${repetitions}`}</span>
-      </div>
+      <audio ref={goSound} src="/sounds/go.mp3" />
+      <audio ref={restSound} src="/sounds/rest.mp3" />
+      <audio ref={alarmSound} src="/sounds/alarm.mp3" />
+      <audio ref={warmupSound} src="/sounds/warmup.mp3" />
     </div>
   );
 };

@@ -4,25 +4,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #000;
   color: yellow;
-}
-
-.timer-display {
-  width: 80vw;
-  max-width: 400px;
-  height: 80vw;
-  max-height: 400px;
-  margin-bottom: 20px;
 }
 
 .timer-buttons {
   display: flex;
-  gap: 10px;
   margin-top: 20px;
 }
 
-.btn {
+.timer-buttons button {
   background-color: yellow;
   color: black;
   border: none;
@@ -31,14 +25,19 @@
   border-radius: 50px;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin: 0 10px;
 }
 
-.btn:hover {
+.timer-buttons button:hover {
   background-color: darkorange;
 }
 
-.timer-cycle {
-  margin-top: 20px;
-  font-size: 1.2rem;
-}
+@media (max-width: 600px) {
+  .timer-buttons {
+    flex-direction: column;
+  }
 
+  .timer-buttons button {
+    margin: 10px 0;
+  }
+}
