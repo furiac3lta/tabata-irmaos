@@ -1,0 +1,44 @@
+/* src/components/Timer.css */
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: yellow;
+}
+
+.timer-display {
+  width: 80vw;
+  max-width: 400px;
+  height: 80vw;
+  max-height: 400px;
+  margin-bottom: 20px;
+}
+
+.timer-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  background-color: yellow;
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: darkorange;
+}
+
+.timer-cycle {
+  margin-top: 20px;
+  font-size: 1.2rem;
+}
+
